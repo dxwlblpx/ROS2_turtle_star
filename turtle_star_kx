@@ -1,0 +1,149 @@
+#include "rclcpp/rclcpp.hpp"
+
+#include "geometry_msgs/msg/twist.hpp"
+
+#include <chrono>
+
+using namespace std::chrono_literals;
+
+class TurtleCircleNode : public rclcpp::Node
+
+{
+
+private:
+
+    rclcpp::TimerBase::SharedPtr timer_;
+
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher_;
+
+public:
+
+    explicit TurtleCircleNode(const std::string& node_name) : Node(node_name)
+
+    {
+
+        publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/turtle1/cmd_vel", 10);
+
+        timer_ = this->create_wall_timer(100ms, std::bind(&TurtleCircleNode::timer_callback, this));
+
+    }
+
+    int state=0;
+
+    int state_count=0;
+
+    int tick=0;
+
+    void timer_callback()
+
+    {
+
+        if(state_count>=10){
+
+            auto msg = geometry_msgs::msg::Twist();
+
+            msg.linear.x = 0.0;
+
+            msg.angular.z = 0.0;
+
+            publisher_->publish(msg);
+
+            return;
+
+        }
+
+        if(state==0){
+
+            auto msg = geometry_msgs::msg::Twist();
+
+            msg.linear.x = 1.0;
+
+            msg.angular.z = 0.0;
+
+            tick++;
+
+            publisher_->publish(msg);
+
+            if(tick>=10){
+
+            state=1;
+
+            tick=0;
+
+            }
+
+        }
+
+        else{
+
+            auto msg = geometry_msgs::msg::Twist();
+
+            if(state_count == 0 || state_count % 2 == 0){
+
+                msg.linear.x = 0.0;
+
+                msg.angular.z = 2.51;
+
+                tick++;
+
+  
+
+                if(tick>=10){
+
+                state=0;
+
+                tick=0;
+
+                state_count++;
+
+                }
+
+        }
+
+         else if(state_count % 2 != 0){
+
+            msg.linear.x = 0.0;
+
+            msg.angular.z = -1.25;
+
+            tick++;
+
+  
+
+            if(tick>=10){
+
+            state=0;
+
+            tick=0;
+
+            state_count++;
+
+            }
+
+        }  
+
+            publisher_->publish(msg);
+
+        }
+
+        }
+
+};
+
+  
+
+int main(int argc,char ** argv)
+
+{
+
+rclcpp::init(argc,argv);
+
+auto node = std::make_shared<TurtleCircleNode>("turtle_circle");
+
+rclcpp::spin(node);
+
+rclcpp::shutdown();
+
+return 0;
+
+}
