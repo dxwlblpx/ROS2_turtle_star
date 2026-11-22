@@ -4,7 +4,11 @@
 
 #include <chrono>
 
+  
+
 using namespace std::chrono_literals;
+
+  
 
 class TurtleCircleNode : public rclcpp::Node
 
@@ -16,6 +20,8 @@ private:
 
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher_;
 
+  
+
 public:
 
     explicit TurtleCircleNode(const std::string& node_name) : Node(node_name)
@@ -25,6 +31,8 @@ public:
         publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/turtle1/cmd_vel", 10);
 
         timer_ = this->create_wall_timer(100ms, std::bind(&TurtleCircleNode::timer_callback, this));
+
+        this->declare_parameter("walk_tick", 10);
 
     }
 
@@ -37,6 +45,8 @@ public:
     void timer_callback()
 
     {
+
+        int walk_tick = this->get_parameter("walk_tick").as_int();
 
         if(state_count>=10){
 
@@ -64,7 +74,7 @@ public:
 
             publisher_->publish(msg);
 
-            if(tick>=10){
+            if(tick>=walk_tick){
 
             state=1;
 
@@ -78,15 +88,13 @@ public:
 
             auto msg = geometry_msgs::msg::Twist();
 
-            if(state_count == 0 || state_count % 2 == 0){
+                if(state_count == 0 || state_count % 2 == 0){
 
                 msg.linear.x = 0.0;
 
                 msg.angular.z = 2.51;
 
                 tick++;
-
-  
 
                 if(tick>=10){
 
@@ -98,38 +106,37 @@ public:
 
                 }
 
-        }
+            }
 
-         else if(state_count % 2 != 0){
+            else if(state_count % 2 != 0){
 
-            msg.linear.x = 0.0;
+                msg.linear.x = 0.0;
 
-            msg.angular.z = -1.25;
+                msg.angular.z = -1.25;
 
-            tick++;
+                tick++;
 
-  
+                if(tick>=10){
 
-            if(tick>=10){
+                state=0;
 
-            state=0;
+                tick=0;
 
-            tick=0;
+                state_count++;
 
-            state_count++;
+                }
 
             }
 
-        }  
-
-            publisher_->publish(msg);
+             publisher_->publish(msg);
 
         }
 
-        }
+     }
 
-};
+ };
 
+  
   
 
 int main(int argc,char ** argv)
